@@ -74,10 +74,11 @@ class InputMetricValidator:
         dictionary = {'plots': [shap_plot], 'metrics': shap_metrics}
         return dictionary
     def perform_shap_values_gbm(self, model, input_metrics: InputMetrics):
-        x_train, x_test, y_train, y_test = model.split_input_metrics(input_metrics)
+        #x_train, x_test, y_train, y_test = model.split_input_metrics(input_metrics)
+        x_test,name = input_metrics.get_metric_matrix()
         # train model
         m = model.get_model()
-        m.params['objective'] = 'binary'
+        #m.params['objective'] = 'binary'
         # explain the model's predictions using SHAP
         explainer = shap.TreeExplainer(m)
         np.random.seed(42)
@@ -85,16 +86,17 @@ class InputMetricValidator:
         shap_values = explainer.shap_values(s)
 
         # visualize the first prediction's explaination
-        name = list([str(i) for i in input_metrics.get_metrics().keys()])
-        # name = m.feature_name()
-        shap.summary_plot(shap_values, s,feature_names=name,show=False)
+        #name = list([str(i) for i in input_metrics.get_metrics().keys()])
+        
+        shap.summary_plot(shap_values, s,feature_names=name,show=False,plot_size=(35.0,15.0))
         shap_plot = pl.gcf()
         temp=np.array([np.array(xi) for xi in x_test])
 
         shap_metrics = {}
-        for name, shap_value in zip(name, shap_values):
+        classes=['class 0','class 1']
+        for name, shap_value in zip(classes, shap_values):
             shap_metrics[name] = shap_value.tolist()
-        dictionary = {'plots': [shap_plot], 'metrics': shap_metrics}
+        dictionary = {'plots': [shap_plot], 'metrics': shap_metrics}#shap metrix would be # samples x # features for each class
         return dictionary
     def perform_partial_dependence_plot_knn(self, model: Classifier,
                                                 input_metrics: InputMetrics):

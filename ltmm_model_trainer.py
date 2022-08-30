@@ -1,3 +1,4 @@
+from dbm import dumb
 import os
 import psutil
 import numpy as np
@@ -70,13 +71,19 @@ class ModelTrainer:
     def benchmark_existing_classifier(self, model_path, scaler_path, metric_path,output_path):
         im_val = InputMetricValidator()
         cl_ev = ClassifierEvaluator()
-        eval_metrics = [ClassifierMetrics.PDP_GBM]#LIME can only be associated with KNN
+        eval_metrics = [ClassifierMetrics.SHAP_GBM]#LIME can only be associated with KNN
         # classifiers = [KNNRiskClassifier(), LightGBMRiskClassifier({}),
         #                SVMRiskClassifier()]
         classifier = self.import_classifier(model_path, scaler_path)
         input_metrics = self.read_parse_im(metric_path)
         metric_names = classifier.get_model().feature_name()
         feature_importance = classifier.get_model().feature_importance()
+        temp_dict={}
+        for idx in range(len(metric_names)):
+            temp_dict[metric_names[idx]]=feature_importance[idx]
+        temp_list=sorted(temp_dict.items(),key=lambda x:-x[1])
+        print([temp_list[i] for i in range(15)])
+
         plt.bar(classifier.get_model().feature_name(), classifier.get_model().feature_importance())
         plt.show()
         plt.close()
@@ -93,12 +100,18 @@ class ModelTrainer:
         # results = im_val.perform_permutation_feature_importance(classifier, input_metrics, show_plot=True)
         # return results
 
-    def test_model(self, input_metrics):
+    def test_model(self, metric_path):
+        input_metrics = self.read_parse_im(metric_path)
+        x, names = input_metrics.get_metric_matrix()
+        names = [name.replace(':', '_') for name in names]
+        names = [name.replace(' ', '_') for name in names]
+        names = [name.replace('__', '_') for name in names]
         x_train, x_test, y_train, y_test = self.rc.split_input_metrics(input_metrics)
         x_train, x_test = self.rc.scale_train_test_data(x_train, x_test)
-        self.rc.train_model_optuna(x_train, y_train)
+        self.rc.train_model_optuna(x_train, y_train, names=names)
         acc, pred = self.rc.score_model(x_test, y_test)
         cr = self.rc.create_classification_report(y_test, pred)
+        print(cr)
         print('ok')
 
     def read_parse_im(self, im_path):
@@ -145,14 +158,16 @@ class ModelTrainer:
 
 
 def main():
-    #mt = ModelTrainer()
+    mt = ModelTrainer()
     
-    # walk_seg_im_path=r'F:\long-term-movement-monitoring-database-1.0.0\input_metrics\model_input_metrics_20220802-011442.json'
-    # model_output_path=r'F:/long-term-movement-monitoring-database-1.0.0/output_dir'
-    # model_name = 'lgbm_skdh_ltmm_rcm_'
-    # scaler_name = 'lgbm_skdh_ltmm_scaler_'
+    walk_seg_im_path=r'F:\long-term-movement-monitoring-database-1.0.0\input_metrics\model_input_metrics_20220802-011442.json'
+    model_output_path=r'F:/long-term-movement-monitoring-database-1.0.0/output_dir'
+    metric_path = r'F:\long-term-movement-monitoring-database-1.0.0\input_metrics\model_input_metrics_20220802-011442.json'
+    model_name = 'lgbm_skdh_ltmm_rcm_'
+    scaler_name = 'lgbm_skdh_ltmm_scaler_'
     #mt.generate_model(walk_seg_im_path,model_output_path,model_name,scaler_name)
-    
+    mt.test_model(metric_path)
+    return
     # Input params
     dp = r'F:/long-term-movement-monitoring-database-1.0.0/long-term-movement-monitoring-database-1.0.0/'
     cdp = r'F:/long-term-movement-monitoring-database-1.0.0/long-term-movement-monitoring-database-1.0.0/ClinicalDemogData_COFL.xlsx'
@@ -225,7 +240,7 @@ def main():
         ]
 
     final_skdh_metric_names = ['PARAM:gait speed: mean', 'PARAM:gait speed: std', 'BOUTPARAM:gait symmetry index: mean', 'BOUTPARAM:gait symmetry index: std', 'PARAM:cadence: mean', 'PARAM:cadence: std', 'Bout Steps: mean', 'Bout Steps: std', 'Bout Duration: mean', 'Bout Duration: std', 'Bout N: mean', 'Bout N: std', 'Bout Starts: mean', 'Bout Starts: std', 'PARAM:stride time: mean', 'PARAM:stride time: std', 'PARAM:stride time asymmetry: mean', 'PARAM:stride time asymmetry: std', 'PARAM:stance time: mean', 'PARAM:stance time: std', 'PARAM:stance time asymmetry: mean', 'PARAM:stance time asymmetry: std', 'PARAM:swing time: mean', 'PARAM:swing time: std', 'PARAM:swing time asymmetry: mean', 'PARAM:swing time asymmetry: std', 'PARAM:step time: mean', 'PARAM:step time: std', 'PARAM:step time asymmetry: mean', 'PARAM:step time asymmetry: std', 'PARAM:initial double support: mean', 'PARAM:initial double support: std', 'PARAM:initial double support asymmetry: mean', 'PARAM:initial double support asymmetry: std', 'PARAM:terminal double support: mean', 'PARAM:terminal double support: std', 'PARAM:terminal double support asymmetry: mean', 'PARAM:terminal double support asymmetry: std', 'PARAM:double support: mean', 'PARAM:double support: std', 'PARAM:double support asymmetry: mean', 'PARAM:double support asymmetry: std', 'PARAM:single support: mean', 'PARAM:single support: std', 'PARAM:single support asymmetry: mean', 'PARAM:single support asymmetry: std', 'PARAM:step length: mean', 'PARAM:step length: std', 'PARAM:step length asymmetry: mean', 'PARAM:step length asymmetry: std', 'PARAM:stride length: mean', 'PARAM:stride length: std', 'PARAM:stride length asymmetry: mean', 'PARAM:stride length asymmetry: std', 'PARAM:gait speed asymmetry: mean', 'PARAM:gait speed asymmetry: std', 'PARAM:intra-step covariance - V: mean', 'PARAM:intra-step covariance - V: std', 'PARAM:intra-stride covariance - V: mean', 'PARAM:intra-stride covariance - V: std', 'PARAM:harmonic ratio - V: mean', 'PARAM:harmonic ratio - V: std', 'PARAM:stride SPARC: mean', 'PARAM:stride SPARC: std', 'BOUTPARAM:phase coordination index: mean', 'BOUTPARAM:phase coordination index: std', 'Bout Steps: sum', 'Bout Duration: sum', 'Bout Starts', 'Bout Duration']
-
+    print(len(final_skdh_metric_names))
     ## Run metric generation
     # mg = LTMMMetricGenerator(dp, cdp, seg,
     #              epoch, custom_metric_names, gait_metric_names, final_skdh_metric_names)

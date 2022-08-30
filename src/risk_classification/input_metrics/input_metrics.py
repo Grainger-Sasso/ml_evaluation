@@ -37,8 +37,16 @@ class InputMetrics:
     def get_metric_matrix(self):
         metrics = []
         names = []
+        shap_target={'PARAM_stride_SPARC_mean','mean','rms','cov', 'PARAM_gait_speed_mean','sma','std','PARAM_intra-stride_covariance_-_V_mean','PARAM_stride_SPARC_std','PARAM_step_length_asymmetry_std',
+'PARAM_stride_length_mean','PARAM_intra-step_covariance_-_V_std','BOUTPARAM_gait_symmetry_index_mean','PARAM_intra-step_covariance_-_V_mean','Bout_Starts_mean'}
+#         FID_target={'mean','rms','cov','se','sma','std','PARAM_stride_SPARC_mean','BOUTPARAM_gait_symmetry_index_mean','PARAM_gait_speed_mean', 'PARAM_step_length_asymmetry_std', 
+# 'PARAM_intra-step_covariance_-_V_mean','PARAM_stride_SPARC_std', 'PARAM_step_length_std', 'PARAM_step_length_mean', 'PARAM_gait_speed_std'}
         for name, metric in self.metrics.items():
-            metrics.append(metric.get_value())
-            names.append(name)
+            name=name.replace(':', '_')
+            name=name.replace(' ', '_')
+            name=name.replace('__', '_')
+            if name in shap_target:
+                metrics.append(metric.get_value())
+                names.append(name)
         # Returns shape of metrics (n_samples, n_features)
         return np.array(metrics).T, names

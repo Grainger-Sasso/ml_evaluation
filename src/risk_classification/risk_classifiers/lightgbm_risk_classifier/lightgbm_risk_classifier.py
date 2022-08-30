@@ -47,11 +47,12 @@ class LightGBMRiskClassifier(Classifier):
 
     # train lightgbm risk classifier using 33% holdout cross-validation
     def train_model_optuna(self,  x, y, **kwargs):
+        
         self.current_dataset = [x, y]
         optuna.logging.set_verbosity(optuna.logging.ERROR)
         # train lightgbm
         study = optuna.create_study(direction="minimize")
-        study.optimize(self.opt_objective, n_trials=500)
+        study.optimize(self.opt_objective, n_trials=50)
         # optuna.visualization.plot_optimization_history(study)
         # get best trial's lightgbm (hyper)parameters and print best trial score
         trial = study.best_trial
@@ -61,7 +62,7 @@ class LightGBMRiskClassifier(Classifier):
         model = lgb.train(trial.params, lgbdata)
         print("in LightGMB",trial.params,model.params)
         self.set_model(model)
-        # print("Best LOOCV value was {}\n".format(trial.value))
+        #print("Best LOOCV value was {}\n".format(trial.value))
 
     def train_model(self, input_metrics, **kwargs):
         x_train, x_test, y_train, y_test = self.split_input_metrics(input_metrics)
@@ -204,9 +205,14 @@ class LightGBMRiskClassifier(Classifier):
         lgbdata = lgb.Dataset(x_train, label=y_train)
         params = {
             "objective": "binary",
-            "metric": "binary_logloss",
+            "metric": "binary_logloss",#binary_logloss
             "verbosity": -1,
             "boosting_type": "gbdt",
+            "max_bin":450,
+            # "path_smooth":trial.suggest_int("path_smooth", 1, 10,
+            #                                  log=True),
+            # "num_boost_round":trial.suggest_int("num_boost_round",150, 300,
+            #                                  log=True),
             "lambda_l1": trial.suggest_float("lambda_l1", 1e-15, 60.0,
                                              log=True),
             "lambda_l2": trial.suggest_float("lambda_l2", 1e-15, 60.0,
