@@ -162,7 +162,7 @@ def main():
     
     walk_seg_im_path=r'F:\long-term-movement-monitoring-database-1.0.0\input_metrics\model_input_metrics_20220802-011442.json'
     model_output_path=r'F:/long-term-movement-monitoring-database-1.0.0/output_dir'
-    metric_path = r'F:\long-term-movement-monitoring-database-1.0.0\input_metrics\model_input_metrics_20220802-011442.json'
+    metric_path = r'D:\Carapace\Metrics_data\model_input_metrics_20220802-011442.json'
     model_name = 'lgbm_skdh_ltmm_rcm_'
     scaler_name = 'lgbm_skdh_ltmm_scaler_'
     #mt.generate_model(walk_seg_im_path,model_output_path,model_name,scaler_name)
@@ -256,7 +256,7 @@ def main():
     #Benchmarking
     model_path = r'F:\long-term-movement-monitoring-database-1.0.0\output_dir\lgbm_skdh_ltmm_rcm_20220819-120907.pkl'
     scaler_path = r'F:\long-term-movement-monitoring-database-1.0.0\output_dir\lgbm_skdh_ltmm_scaler_20220819-120907.bin'
-    metric_path = r'F:\long-term-movement-monitoring-database-1.0.0\input_metrics\model_input_metrics_20220802-011442.json'
+    metric_path = r'D:\Carapace\Metrics_data\model_input_metrics_20220802-011442.json'
     mt.benchmark_existing_classifier(model_path, scaler_path, metric_path,metric_output_path)
 
     # Model Gen
