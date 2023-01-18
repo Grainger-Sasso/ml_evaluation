@@ -166,6 +166,7 @@ class InputMetricValidator:
         pdp_plot={}
         pdp_metrics={}
         names=dataframe.columns.values.tolist()
+        pdp_value_var_dict={}
 
 
         for n in names:
@@ -184,8 +185,11 @@ class InputMetricValidator:
             var_dict_df=pd.DataFrame.from_dict(var_dict)
             axess['pdp_ax'].plot(var_dict_df.T,marker='o', color='r')
             pdp_plot[n]=pl.gcf()
-            pdp_metrics[n]=[pdp_sex.ice_lines.to_dict(),pdp_sex.pdp.tolist(),var_dict]
-
+            #pdp_metrics[n]={'ice_line':pdp_sex.ice_lines.to_dict(),'mean':pdp_sex.pdp.tolist(),'var_dict':var_dict}
+            pdp_metrics[n]={'mean':pdp_sex.pdp.tolist()}
+            pdp_value_var_dict[n]=np.var(pdp_sex.pdp.tolist())
+        pdp_value_var_ordered_list=sorted(pdp_value_var_dict.items(),key=lambda x:-x[1])[0:20]
+        print(pdp_value_var_ordered_list)
         for name, pdp_value in zip(names, pdp_metrics):
             pdp_metrics[name] = pdp_metrics[pdp_value]#[{p:pdp_metrics[pdp_value][p].tolist()} for p in pdp_metrics[pdp_value]]#a dic with average and value as key
         dictionary = {'plots': pdp_plot, 'metrics': pdp_metrics}

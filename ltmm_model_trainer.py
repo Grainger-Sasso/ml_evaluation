@@ -71,7 +71,7 @@ class ModelTrainer:
     def benchmark_existing_classifier(self, model_path, scaler_path, metric_path,output_path):
         im_val = InputMetricValidator()
         cl_ev = ClassifierEvaluator()
-        eval_metrics = [ClassifierMetrics.SHAP_GBM]#LIME can only be associated with KNN
+        eval_metrics = [ClassifierMetrics.PDP_GBM]#LIME can only be associated with KNN
         # classifiers = [KNNRiskClassifier(), LightGBMRiskClassifier({}),
         #                SVMRiskClassifier()]
         classifier = self.import_classifier(model_path, scaler_path)
@@ -160,18 +160,18 @@ class ModelTrainer:
 def main():
     mt = ModelTrainer()
     
-    walk_seg_im_path=r'F:\long-term-movement-monitoring-database-1.0.0\input_metrics\model_input_metrics_20220802-011442.json'
-    model_output_path=r'F:/long-term-movement-monitoring-database-1.0.0/output_dir'
-    metric_path = r'D:\Carapace\Metrics_data\model_input_metrics_20220802-011442.json'
-    model_name = 'lgbm_skdh_ltmm_rcm_'
-    scaler_name = 'lgbm_skdh_ltmm_scaler_'
+    # walk_seg_im_path=r'F:\long-term-movement-monitoring-database-1.0.0\input_metrics\model_input_metrics_20220802-011442.json'
+    # model_output_path=r'F:/long-term-movement-monitoring-database-1.0.0/output_dir'
+    # metric_path = r'D:\Carapace\Metrics_data\model_input_metrics_20220802-011442.json'
+    # model_name = 'lgbm_skdh_ltmm_rcm_'
+    # scaler_name = 'lgbm_skdh_ltmm_scaler_'
     #mt.generate_model(walk_seg_im_path,model_output_path,model_name,scaler_name)
-    mt.test_model(metric_path)
-    return
+    #mt.test_model(metric_path)
+    
     # Input params
     dp = r'F:/long-term-movement-monitoring-database-1.0.0/long-term-movement-monitoring-database-1.0.0/'
     cdp = r'F:/long-term-movement-monitoring-database-1.0.0/long-term-movement-monitoring-database-1.0.0/ClinicalDemogData_COFL.xlsx'
-    metric_output_path = 'F:/long-term-movement-monitoring-database-1.0.0/output_dir'
+    metric_output_path = r'F:/long-term-movement-monitoring-database-1.0.0/output_dir'
     seg = False
     epoch = 0.0
     metric_names = tuple(
@@ -256,7 +256,8 @@ def main():
     #Benchmarking
     model_path = r'F:\long-term-movement-monitoring-database-1.0.0\output_dir\lgbm_skdh_ltmm_rcm_20220819-120907.pkl'
     scaler_path = r'F:\long-term-movement-monitoring-database-1.0.0\output_dir\lgbm_skdh_ltmm_scaler_20220819-120907.bin'
-    metric_path = r'D:\Carapace\Metrics_data\model_input_metrics_20220802-011442.json'
+    metric_path = r'F:\long-term-movement-monitoring-database-1.0.0\input_metrics\model_input_metrics_20220802-011442.json'
+    #metric_path = r'D:\Carapace\Metrics_data\model_input_metrics_20220802-011442.json'
     mt.benchmark_existing_classifier(model_path, scaler_path, metric_path,metric_output_path)
 
     # Model Gen

@@ -45,8 +45,8 @@ class InputMetrics:
             name=name.replace(':', '_')
             name=name.replace(' ', '_')
             name=name.replace('__', '_')
-            if name in shap_target:
-                metrics.append(metric.get_value())
-                names.append(name)
+            # if name in shap_target:
+            metrics.append(metric.get_value())
+            names.append(name)
         # Returns shape of metrics (n_samples, n_features)
         return np.array(metrics).T, names

@@ -117,7 +117,6 @@ class ClassifierEvaluator:
             #plots_output_path=os.path.join(plots_output_path,str(plot))
             
         for plot in plots:
-            print(eval_metric,(eval_metric== ClassifierMetrics.PDP_GBM))
             # Building path to the file w/extension
             # if eval_metric == ClassifierMetrics.LIME:
             #     with open("KNNdata2.html", "w") as file:
@@ -144,6 +143,10 @@ class ClassifierEvaluator:
         # if eval_metric==ClassifierMetrics.SHAP:
         #     for k in metrics_result:
         #         metrics_result[k]=metrics_result[k].tolist()
+        if eval_metric==ClassifierMetrics.PDP_GBM:
+            with open(full_path, 'w') as json_file:
+                json.dump(metrics_result, json_file,indent=4)
+            return
         with open(full_path, 'w') as json_file:
             json.dump(metrics_result, json_file)
 

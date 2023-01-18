@@ -1,7 +1,6 @@
 from sklearn.datasets import make_blobs
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split,KFold
 from matplotlib import pyplot as plt
-from sklearn.model_selection import train_test_split
 import sklearn.metrics
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import ShuffleSplit
@@ -14,7 +13,6 @@ from sklearn.metrics import classification_report
 import numpy as np
 import lightgbm as lgb
 import optuna
-from sklearn.model_selection import train_test_split
 
 from src.risk_classification.risk_classifiers.classifier import Classifier
 from src.risk_classification.input_metrics.input_metrics import InputMetrics
@@ -131,7 +129,7 @@ class LightGBMRiskClassifier(Classifier):
         # perform optimal parameter search using k-fold cv
         # (uses 1000 boosting rounds with 100 early stopping rounds)
         tuner = optuna.integration.lightgbm.LightGBMTunerCV(
-            params, lgb_dataset_for_kfold_cv, early_stopping_rounds=100, folds=KFold(n_splits=folds))
+            params, lgb_dataset_for_kfold_cv, early_stopping_rounds=100, folds=KFold(n_splits=folds),optuna_seed=42,seed=42)
         tuner.run()
         lgbdata = lgb.Dataset(x, label=y)
         model = lgb.LGBMClassifier(objective=tuner.best_params['objective'],
@@ -141,7 +139,10 @@ class LightGBMRiskClassifier(Classifier):
                     feature_fraction=tuner.best_params['feature_fraction'],
                     bagging_fraction=tuner.best_params['bagging_fraction'],
                     bagging_freq=tuner.best_params['bagging_freq'],
-                    min_child_samples=tuner.best_params['min_child_samples'])
+                    min_child_samples=tuner.best_params['min_child_samples'],
+                    verbosity=tuner.best_params['verbosity']
+                    )
+        
         # get best trial's lightgbm (hyper)parameters and print best trial score
         self.set_model(model)
         return self.cross_validator.cross_val_model(model, x, y, folds)
@@ -199,38 +200,44 @@ class LightGBMRiskClassifier(Classifier):
         # get current dataset and then perform validation split
         x = self.current_dataset[0]
         y = self.current_dataset[1]
-        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33)
+        kf=KFold(n_split=len(y))
+        rmse_list=[]
+        for train_idx,test_idx in kf.split(x):
+            x_train, x_test=x[train_idx],x_test[test_idx]
+            y_train,y_test = y[train_idx],y_test[y_test]
+        #x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33)
         # x_train_t, x_test_t = self.scale_train_test_data(x_train, x_test)
         # create lgb dataset for lightgbm training
-        lgbdata = lgb.Dataset(x_train, label=y_train)
-        params = {
-            "objective": "binary",
-            "metric": "binary_logloss",#binary_logloss
-            "verbosity": -1,
-            "boosting_type": "gbdt",
-            "max_bin":128,
-            # "path_smooth":trial.suggest_int("path_smooth", 1, 10,
-            #                                  log=True),
-            # "num_boost_round":trial.suggest_int("num_boost_round",150, 300,
-            #                                  log=True),
-            "lambda_l1": trial.suggest_float("lambda_l1", 1e-18, 100.0,
-                                             log=True),
-            "lambda_l2": trial.suggest_float("lambda_l2", 1e-15, 100.0,
-                                             log=True),
-            "num_leaves": trial.suggest_int("num_leaves", 2, 514),
-            "feature_fraction": trial.suggest_float("feature_fraction",
-                                                    0.01, 1.0),
-            "bagging_fraction": trial.suggest_float("bagging_fraction",
-                                                    0.01, 1.0),
-            "bagging_freq": trial.suggest_int("bagging_freq", 1, 20),
-            "min_child_samples": trial.suggest_int("min_child_samples", 3,
-                                                   100),
-        }
-        my_lgbm = lgb.train(params, lgbdata)
-        raw_predictions = my_lgbm.predict(x_test)
-        predictions = np.rint(raw_predictions)
-        rmse = mean_squared_error(y_test, predictions) ** 0.5
-        return rmse
+            lgbdata = lgb.Dataset(x_train, label=y_train)
+            params = {
+                "objective": "binary",
+                "metric": "binary_logloss",#binary_logloss
+                "verbosity": -1,
+                "boosting_type": "gbdt",
+                "max_bin":128,
+                # "path_smooth":trial.suggest_int("path_smooth", 1, 10,
+                #                                  log=True),
+                # "num_boost_round":trial.suggest_int("num_boost_round",150, 300,
+                #                                  log=True),
+                "lambda_l1": trial.suggest_float("lambda_l1", 1e-18, 100.0,
+                                                log=True),
+                "lambda_l2": trial.suggest_float("lambda_l2", 1e-15, 100.0,
+                                                log=True),
+                "num_leaves": trial.suggest_int("num_leaves", 2, 514),
+                "feature_fraction": trial.suggest_float("feature_fraction",
+                                                        0.01, 1.0),
+                "bagging_fraction": trial.suggest_float("bagging_fraction",
+                                                        0.01, 1.0),
+                "bagging_freq": trial.suggest_int("bagging_freq", 1, 20),
+                "min_child_samples": trial.suggest_int("min_child_samples", 3,
+                                                    100)
+            }
+            my_lgbm = lgb.train(params, lgbdata)
+            raw_predictions = my_lgbm.predict(x_test)
+            predictions = np.rint(raw_predictions)
+            rmse = mean_squared_error(y_test, predictions) ** 0.5
+            rmse_list.append(rmse)
+        return np.mean(rmse_list)
 
 
 if __name__ == "__main__":
